@@ -1,4 +1,10 @@
-import opensea
+"""
+Currently this is executed via a discord async loop:
+However it silently crashes after a few days;
+Will move to discord webhooks
+"""
+
+from util import opensea
 from datetime import datetime
 from discord.ext import commands
 from discord.ext.tasks import loop
@@ -11,13 +17,12 @@ import requests
 
 import discord
 
-import math
 import copy
 
 
 API = "2d5ca92fcfe849389a0cf12b73df9340"
 CONTRACT = "0x017Ba9AC7916ebd646e7c11DD220c05c5b790224"
-BOT_ID = "ODkxMDU3NzM1MDIwNDc4NTM1.YU40Lw.DH0LrjTc4BvjMYjpIvDuUptPLQQ"
+BOT_ID = ""
 
 intents = discord.Intents.none()
 intents.reactions = True
@@ -33,17 +38,7 @@ channels = [885935079791161415, 891002883863097345]
 gas_channel = 893010436948111361
 initState = 0
 iter1 = 0
-
 elapsed = 0
-
-
-@loop(seconds=1)
-async def gas_watch():
-    global elapsed
-    await bot.wait_until_ready()
-    channel = bot.get_channel(gas_channel)
-
-
 @loop(seconds=1)
 async def os_watch():
     await bot.wait_until_ready()
@@ -82,19 +77,19 @@ async def os_watch():
 
             svg_source = requests.get(item[6]).text
             print(svg_source)
-            with open('svg_source.svg', 'w') as file:
+            with open('sales.svg', 'w') as file:
                 file.write(svg_source)
 
-            drawing = svg2rlg("svg_source.svg")
-            renderPM.drawToFile(drawing, "this_img.png", fmt="PNG")
+            drawing = svg2rlg("sales.svg")
+            renderPM.drawToFile(drawing, "sales.png", fmt="PNG")
 
-            file = discord.File("this_img.png")
+            file = discord.File("sales.png")
 
             payload = "[OpenSea Link]"+ "(https://opensea.io/assets/" + CONTRACT + "/" + item[1] + ")"
             embedVar = discord.Embed(title="Fives #" + str(item[1]) + " purchased for " + str(item[2]) + " ETH | $" + str(item[3]), description=payload, color=0xFF0000)
             embedVar.timestamp = datetime.utcnow()
             embedVar.set_footer(text=("Project FIVES"))
-            embedVar.set_image(url="attachment://this_img.png")
+            embedVar.set_image(url="attachment://sales.png")
             await channel.send(embed=embedVar, file=file)
 
 

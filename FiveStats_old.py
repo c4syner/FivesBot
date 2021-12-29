@@ -1,210 +1,3 @@
- #v1 FIVES Stats
-from datetime import datetime
-from discord.ext import commands
-from discord.ext import tasks
-from discord.utils import get
-
-import discord
-from discord.ext import menus
-
-import math
-import copy
-import time
-import random
-import statistics
-
-import fives_data
-
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
-
-import requests
-import opensea
-
-import matplotlib.pyplot as plt
-import os
-
-class RarityPages(menus.Menu):
-    async def send_initial_message(self, ctx, channel):
-
-        payload = copy.copy(self.embed_var.description)
-        this_embed = copy.copy(self.embed_var)
-
-
-        pages = math.ceil(len(self.data) / 10)
-
-        dat = "```\n"
-        for i in range(len(self.data)):
-            if(i >= self.iter_var and i < self.iter_cap+self.iter_var):
-                dat = dat + str(self.data[i]) + "\n"
-        dat = dat + "```"
-        payload = payload + dat
-        this_embed.description = payload
-
-        this_embed._footer["text"] = "Project Fives • Page " + str(int(1)) + " of " + str(pages)
-
-        return await channel.send(embed=this_embed)
-
-    @menus.button('◀')
-    async def on_back(self, payload):
-        self.iter_var = self.iter_var - 10
-        if(self.iter_var < 0):
-            self.iter_var = 0
-
-        pages = math.ceil(len(self.data) / 10)
-        if (self.iter_var != 0):
-            this_page = 1 + (self.iter_var / 10)
-        else:
-            this_page = 1
-
-
-
-        payload = copy.copy(self.embed_var.description)
-        this_embed = copy.copy(self.embed_var)
-
-        dat = "```\n"
-        for i in range(len(self.data)):
-            if (i >= self.iter_var and i < self.iter_cap + self.iter_var):
-                dat = dat + str(self.data[i]) + "\n"
-        dat = dat + "```"
-        payload = payload + dat
-        this_embed.description = payload
-
-        if (this_page == pages):
-            self.iter_var = self.iter_var - 10
-
-        this_embed._footer["text"] = "Project Fives • Page " + str(int(this_page)) + " of " + str(pages)
-
-        await self.message.edit(embed=this_embed)
-
-    @menus.button('▶')
-    async def on_right(self, payload):
-        pages = math.ceil(len(self.data) / 10)
-        #little test for overflow
-        if (self.iter_var != 0):
-            this_page = 1 + (self.iter_var / 10)
-        else:
-            this_page = 1
-
-        if(this_page == pages):
-            self.iter_var = self.iter_var - 10
-
-        self.iter_var = self.iter_var + 10
-        if (self.iter_var > len(self.data)):
-            self.iter_var = len(self.data)-10
-
-        if (self.iter_var != 0):
-            this_page = 1 + (self.iter_var / 10)
-        else:
-            this_page = 1
-
-
-
-
-        payload = copy.copy(self.embed_var.description)
-        this_embed = copy.copy(self.embed_var)
-
-
-        dat = "```\n"
-        for i in range(len(self.data)):
-            if (i >= self.iter_var and i < self.iter_cap + self.iter_var):
-                dat = dat + str(self.data[i]) + "\n"
-        dat = dat + "```"
-        payload = payload + dat
-        this_embed.description = payload
-
-        this_embed._footer["text"] = "Project Fives • Page " + str(int(this_page)) + " of " + str(pages)
-
-        await self.message.edit(embed=this_embed)
-
-class OSPages(menus.Menu):
-    async def send_initial_message(self, ctx, channel):
-
-        payload = copy.copy(self.embed_var.description)
-        this_embed = copy.copy(self.embed_var)
-
-
-        pages = math.ceil(len(self.data) / 10)
-
-        dat = "\n\n**Matching Listings:**\n"
-        for i in range(len(self.data)):
-            if(i >= self.iter_var and i < self.iter_cap+self.iter_var):
-                dat = dat + "[" + str(self.data[i]["token_id"]) + "](https://opensea.io/assets/0x017ba9ac7916ebd646e7c11dd220c05c5b790224/" + str(self.data[i]["token_id"]) + ")" + " - **" + str(self.data[i]["eth_price"]) + " ETH | $" + str(round(self.data[i]["eth_price"] * self.data[i]["usd_eth_rate"], 2)) + "**\n"
-
-        payload = payload + dat
-        this_embed.description = payload
-
-        this_embed._footer["text"] = "Project Fives • Page " + str(int(1)) + " of " + str(pages)
-
-        return await channel.send(embed=this_embed)
-
-    @menus.button('◀')
-    async def on_back(self, payload):
-        self.iter_var = self.iter_var - 10
-        if(self.iter_var < 0):
-            self.iter_var = 0
-
-        pages = math.ceil(len(self.data) / 10)
-        if (self.iter_var != 0):
-            this_page = 1 + (self.iter_var / 10)
-        else:
-            this_page = 1
-
-
-
-        payload = copy.copy(self.embed_var.description)
-        this_embed = copy.copy(self.embed_var)
-        dat = "\n\n**Matching Listings:**\n"
-        for i in range(len(self.data)):
-            if (i >= self.iter_var and i < self.iter_cap + self.iter_var):
-                dat = dat + "[" + str(self.data[i]["token_id"]) + "](https://opensea.io/assets/0x017ba9ac7916ebd646e7c11dd220c05c5b790224/" + str(self.data[i]["token_id"]) + ")" + " - **" + str(self.data[i]["eth_price"]) + " ETH | $" + str(round(self.data[i]["eth_price"] * self.data[i]["usd_eth_rate"], 2)) + "**\n"
-
-        payload = payload + dat
-        this_embed.description = payload
-
-        if (this_page == pages):
-            self.iter_var = self.iter_var - 10
-
-        this_embed._footer["text"] = "Project Fives • Page " + str(int(this_page)) + " of " + str(pages)
-
-        await self.message.edit(embed=this_embed)
-
-    @menus.button('▶')
-    async def on_right(self, payload):
-        pages = math.ceil(len(self.data) / 10)
-        #little test for overflow
-        if (self.iter_var != 0):
-            this_page = 1 + (self.iter_var / 10)
-        else:
-            this_page = 1
-
-        if(this_page == pages):
-            self.iter_var = self.iter_var - 10
-
-        self.iter_var = self.iter_var + 10
-        if (self.iter_var > len(self.data)):
-            self.iter_var = len(self.data)-10
-
-        if (self.iter_var != 0):
-            this_page = 1 + (self.iter_var / 10)
-        else:
-            this_page = 1
-
-
-
-        payload = copy.copy(self.embed_var.description)
-        this_embed = copy.copy(self.embed_var)
-        dat = "\n\n**Matching Listings:**\n"
-        for i in range(len(self.data)):
-            if (i >= self.iter_var and i < self.iter_cap + self.iter_var):
-                dat = dat + "[" + str(self.data[i]["token_id"]) + "](https://opensea.io/assets/0x017ba9ac7916ebd646e7c11dd220c05c5b790224/" + str(self.data[i]["token_id"]) + ")" + " - **" + str(self.data[i]["eth_price"]) + " ETH | $" + str(round(self.data[i]["eth_price"] * self.data[i]["usd_eth_rate"], 2)) + "**\n"
-
-        payload = payload + dat
-        this_embed.description = payload
-
-        this_embed._footer["text"] = "Project Fives • Page " + str(int(this_page)) + " of " + str(pages)
-
-        await self.message.edit(embed=this_embed)
 
 
 
@@ -664,22 +457,17 @@ async def gas(ctx):
 @bot.command()
 async def info(ctx):
     payload = """
-    **Stat Commands**
+    **Commands**
     `f.players` - Displays all available players and their respective positions. 
-    `f.global_rarity` - Displays number of 4x rare, 3x rare, 2x rare, 1x rare, and commons that exist, as well the number of duplicate player Fives and their Token ID's. 
+    `f.drops` - Displays number of 4x rare, 3x rare, 2x rare, 1x rare, and commons that exist, as well the number of duplicate player Fives and their Token ID's. 
     `f.rarity <PLAYER>` - Displays drop rate and number of drops for queried player or group of comma separated players. Additionally, provides up to 10 matching ids.
-    `f.id <TOKEN ID>` - Displays a *Fives* team's rarity, based on each individual player's drop rates. As well as the team's rarity rank out of all tokens. 
+    `f.rank <TOKEN ID>` - Displays a *Fives* team's rarity, based on each individual player's drop rates. As well as the team's rarity rank out of all tokens. 
     `f.img <TOKEN ID>` - Displays a *Fives* team.
     `f.floor <Optional #OF RARES>` - If number of rares is supplied, bot will provide all OpenSea listings that match it. If no arguments are supplied, bot will provide current floors for every number of rares.
     `f.orderbook <PLAYER>` - Scrapes the entire orderbook on OpenSea of all open sell orders and plots all of them within 1.5xIQR of the dataset of tokens that contain your specified player or players.
     `f.osp <PLAYER>` - Provides all OpenSea listings that match a supplied player or collection of players.
     `f.rank_list` - Provides every fives team iterable by its calculated team rank.
     `f.florderbook <# OF RARES>` - Scrapes the entire orderbook on OpenSea of all open sell orders and plots all of them within 1.5xIQR of the dataset of tokens that contain your specified number of rares.
-    **Gas Commands**
-    `f.gas` - Provides the current ethereum network gas fee. 
-    `f.gasph` - Provides the past hour of gas price action (Update once per minute).
-    `f.gas_ping <GWEI (30,40,50,60)>` - Will ping you when gas drops below your specifed gwei, there is a 30 minute timeout whenever a gas ping is sent.
-    `f.purge_pings` - Will remove all gas related roles.
     """
 
     embedVar = discord.Embed(title="", description=payload, color=COLOR)
@@ -945,19 +733,19 @@ async def img(ctx):
     svg_source = requests.get(this_url).text
 
 
-    with open("source.svg", "w") as file:
+    with open("stat.svg", "w") as file:
         file.write(svg_source)
 
-    drawing = svg2rlg("source.svg")
-    renderPM.drawToFile(drawing, "t_img.png", fmt="PNG")
+    drawing = svg2rlg("stat.svg")
+    renderPM.drawToFile(drawing, "stat.png", fmt="PNG")
 
-    file = discord.File("t_img.png")
+    file = discord.File("stat.png")
 
     payload = ""
     embedVar = discord.Embed(title="Fives #" + str(id) ,description=payload, color=0xFF0000)
     embedVar.timestamp = datetime.utcnow()
     embedVar.set_footer(text=("Project FIVES"))
-    embedVar.set_image(url="attachment://t_img.png")
+    embedVar.set_image(url="attachment://stat.png")
     await ctx.message.channel.send(embed=embedVar, file=file)
 
 @tasks.loop(seconds = 10) # repeat after every 10 seconds

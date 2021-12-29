@@ -1,7 +1,5 @@
 import requests
-
 import copy
-import pprint
 
 class OpenSea:
     def __init__(self, ETH_CONTRACT, API_KEY=""):
@@ -11,6 +9,7 @@ class OpenSea:
         self.SINGLE_ASSET_URL = "https://api.opensea.io/api/v1/asset/" + self.ETH_CONTRACT + "/"
         self.MULTI_ASSET_URL = "https://api.opensea.io/api/v1/assets?asset_contract_address=" + self.ETH_CONTRACT
         self.EVENT_URL = "https://api.opensea.io/api/v1/events"
+
     def single_asset(self, id):
         url = self.SINGLE_ASSET_URL + str(id)
         resp = requests.request("GET", url, headers={'X-API-KEY': self.API_KEY})
@@ -23,17 +22,13 @@ class OpenSea:
         for i in range(len(id_list)):
             subend += 1
             this_list.append(id_list[i])
-
             if(subend == 30):
                 master_list.append(this_list)
                 subend = 0
                 this_list = []
-
         if(this_list != [] and subend != 30):
             master_list.append(this_list)
-
         master_return = []
-
         all_urls = []
 
         for tlist in master_list:
@@ -73,8 +68,6 @@ class OpenSea:
         querystring = {"asset_contract_address":self.ETH_CONTRACT,"event_type":"successful","only_opensea": "false", "offset": "0", "limit": "50"}
         headers = {"Accept": "application/json"}
         resp = (requests.request("GET", self.EVENT_URL,headers=headers,params=querystring).json())["asset_events"]
-        #breakdown data / not mem efficient but easier on brain
-
         dl = []
 
         for i in range(len(resp)):
