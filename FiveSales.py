@@ -30,7 +30,6 @@ intents.members = True
 intents.guilds = True
 
 
-
 os = opensea.OpenSea(ETH_CONTRACT=CONTRACT, API_KEY=API)
 bot = commands.Bot(command_prefix='a.', intents=intents)
 past_data = []

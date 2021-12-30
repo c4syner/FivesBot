@@ -57,4 +57,5 @@ async def info(ctx):
 @bot.command()
 async def help(ctx):
     await fives_obj.fives_info(ctx)
-bot.run("ODg2ODcxNzIzMzk0MzYzNDAz.YT75qA.JFPRrW1Cgxj52A2MXbxZ2DspmYg")
+
+bot.run("ODg2ODcxNzIzMzk0MzYzNDAz.YT75qA.J1B4h1qYZeCz4nUF0taKsIQAD1Y")
